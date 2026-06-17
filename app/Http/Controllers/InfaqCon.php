@@ -15,7 +15,7 @@ class InfaqCon extends Controller
 {
 
 
-    public function index()
+    public function oldindex()
     {
         $data = [
             'title' => 'Kelola Data Infaq',
@@ -27,6 +27,32 @@ class InfaqCon extends Controller
 
         return view('rg-infaq', compact('data'));
     }
+    public function index(Request $request)
+    {
+        // ambil tahun ajaran terbaru
+        $tahunajaran = Tahunajaran::orderBy('created_at', 'desc')->first();
+
+        // query dasar
+        $query = Infaq::where('id_tahunajaran', $tahunajaran->id);
+
+        // filter kelas dari URL (?kelas=)
+        if ($request->kelas) {
+            $query->where('id_kelompok', $request->kelas);
+        }
+
+        // ambil data + relasi
+        $infaq = $query->with('kelompok')->get();
+
+        $data = [
+            'title' => 'Data Infaq Tahun Ajaran ' . $tahunajaran->name,
+            'infaq' => $infaq,
+            'tahunajaran' => $tahunajaran,
+            'filter_kelas' => $request->kelas
+        ];
+
+        return view('rg-infaq-datainfaq', compact('data'));
+    }
+
 
     public function byTahunajaran($id, Request $request)
     {

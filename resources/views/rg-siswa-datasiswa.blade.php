@@ -26,6 +26,12 @@
         <a href="/tambahsiswa/<?= $data['angkatan']->id ?>" class="btn btn-primary">
             <i data-lucide="user-plus"></i> Tambah Siswa
         </a>
+        <a href="/spmb/<?= $data['angkatan']->id ?>" class="btn btn-outline-primary">
+            <i data-lucide="user-plus"></i> Ambil Data Dari SPMB
+        </a>
+        <a href="/apin/<?= $data['angkatan']->id ?>" class="btn btn-outline-primary">
+            <i data-lucide="user-plus"></i> Ambil Data Dari Aplikasi Infaq Lama
+        </a>
         
         
     </div>

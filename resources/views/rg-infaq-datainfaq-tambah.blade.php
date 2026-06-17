@@ -29,7 +29,7 @@
 
                     <!-- Nama Infaq -->
                     <td>
-                        <input type="text" name="name[]" class="form-control" value="<?= old('name')[$i] ?? '' ?>">
+                        <input type="text" name="name[]" class="form-control" value="<?= old('name')[$i] ?? '' ?>" placeholder="Masukkan Nama Infaq">
                     </td>
 
                     <!-- Kelas -->
@@ -38,10 +38,12 @@
                             <option value="">-- Pilih Kelas --</option>
 
                             <?php foreach($data['kelompok'] as $k): ?>
+                            <?php if(in_array($k->id, [2,3,4])): ?>
                             <option value="<?= $k->id ?>"
                                 <?= (old('id_kelompok')[$i] ?? '') == $k->id ? 'selected' : '' ?>>
                                 <?= $k->name ?>
                             </option>
+                            <?php endif; ?>
                             <?php endforeach; ?>
 
                         </select>
@@ -49,7 +51,7 @@
 
                     <!-- Nominal -->
                     <td>
-                        <input type="number" name="harga[]" class="form-control" placeholder="50000"
+                        <input type="number" name="harga[]" class="form-control" placeholder="Masukkan Harga"
                             value="<?= old('harga')[$i] ?? '' ?>">
                     </td>
 
@@ -61,7 +63,7 @@
         </table>
 
         <input type="hidden" name="id_tahunajaran" value="<?= $data['tahunajaran']->id ?>">
-     
+
 
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary">

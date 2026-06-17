@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use App\Models\Angkatan;
 use App\Models\Siswa;
@@ -13,15 +14,15 @@ use App\Models\Infaq;
 
 class SiswaCon extends Controller
 {
-    
+
 
     public function index()
     {
-        $data = [        
-        'title'     => 'Kelola Data Siswa',
-        'angkatan' => Angkatan::with('kelompok')
-            ->orderBy('name', 'desc')
-            ->get(),
+        $data = [
+            'title' => 'Kelola Data Siswa',
+            'angkatan' => Angkatan::with('kelompok')
+                ->orderBy('name', 'desc')
+                ->get(),
         ];
 
         return view('rg-siswa', compact('data'));
@@ -46,9 +47,9 @@ class SiswaCon extends Controller
 
     public function angkatan_tambah()
     {
-        $data = [        
-        'title'     => 'Kenaikan Kelas & Tahun Ajaran Baru',
-        'kelompok' => Kelompok::all(),
+        $data = [
+            'title' => 'Kenaikan Kelas & Tahun Ajaran Baru',
+            'kelompok' => Kelompok::all(),
         ];
 
         return view('rg-siswa-angkatan-tambah', compact('data'));
@@ -80,12 +81,12 @@ class SiswaCon extends Controller
 
         try {
 
-             
-            $ada = Angkatan::whereIn('id_kelompok', [2,3,4])->exists();
+
+            $ada = Angkatan::whereIn('id_kelompok', [2, 3, 4])->exists();
 
             if ($ada) {
 
-               
+
                 Angkatan::where('id_kelompok', 4)->update([
                     'id_kelompok' => 5,
                     'tahun_lulus' => now()
@@ -95,7 +96,7 @@ class SiswaCon extends Controller
                 Angkatan::where('id_kelompok', 2)->update(['id_kelompok' => 3]);
             }
 
-            
+
             Angkatan::create([
                 'name' => $request->name,
                 'id_kelompok' => 2
@@ -125,12 +126,13 @@ class SiswaCon extends Controller
                 '12 Infaq Juni',
             ];
 
-            $kelases = [2,3,4]; // 7,8,9
+            $kelases = [2, 3, 4]; // 7,8,9
 
             foreach ($kelases as $kls) {
 
                 $angkatan = Angkatan::where('id_kelompok', $kls)->first();
-                if (!$angkatan) continue;
+                if (!$angkatan)
+                    continue;
 
                 //  1. Infaq bulanan
                 foreach ($bulan as $nama) {
@@ -163,7 +165,7 @@ class SiswaCon extends Controller
                 }
 
                 //  3. Kelas 7 & 8
-                if (in_array($kls, [2,3])) {
+                if (in_array($kls, [2, 3])) {
                     Infaq::create([
                         'name' => 'ASTS 2',
                         'id_tahunajaran' => $id_tahun,
@@ -231,16 +233,16 @@ class SiswaCon extends Controller
     public function datasiswa_tambah($id)
     {
         $angkatan = Angkatan::find($id);
-        $data = [        
-        'title'     => 'Tambah Siswa ' . optional($angkatan->kelompok)->name,
-        'angkatan'  => $angkatan
+        $data = [
+            'title' => 'Tambah Siswa ' . optional($angkatan->kelompok)->name,
+            'angkatan' => $angkatan
         ];
 
         return view('rg-siswa-datasiswa-tambah', compact('data'));
     }
 
     public function datasiswa_simpan(Request $request)
-    {        
+    {
         $names = $request->name;
         $whatsapps = $request->no_whatsapp;
         $id = $request->id_angkatan;
@@ -253,12 +255,12 @@ class SiswaCon extends Controller
         for ($i = 0; $i < count($names); $i++) {
 
             $nama = trim($names[$i] ?? '');
-            $wa   = trim($whatsapps[$i] ?? '');
+            $wa = trim($whatsapps[$i] ?? '');
 
             if (($nama && !$wa) || (!$nama && $wa)) {
                 return back()
                     ->withInput()
-                    ->with('error', 'Nama dan No Whatsapp harus diisi bersamaan (cek baris ke-' . ($i+1) . ')');
+                    ->with('error', 'Nama dan No Whatsapp harus diisi bersamaan (cek baris ke-' . ($i + 1) . ')');
             }
         }
 
@@ -267,9 +269,10 @@ class SiswaCon extends Controller
         for ($i = 0; $i < count($names); $i++) {
 
             $nama = trim($names[$i] ?? '');
-            $wa   = trim($whatsapps[$i] ?? '');
+            $wa = trim($whatsapps[$i] ?? '');
 
-            if (!$nama && !$wa) continue;
+            if (!$nama && !$wa)
+                continue;
 
             Siswa::create([
                 'name' => $nama,
@@ -277,7 +280,7 @@ class SiswaCon extends Controller
                 'id_angkatan' => $id
             ]);
 
-            $jumlah++; 
+            $jumlah++;
         }
 
         return redirect()->route('siswa.angkatan', $id)
@@ -297,7 +300,7 @@ class SiswaCon extends Controller
 
         $data = [
             'title' => 'Edit Siswa',
-            'siswa'  => $siswa
+            'siswa' => $siswa
         ];
 
         return view('rg-siswa-datasiswa-edit', compact('data'));
@@ -312,7 +315,7 @@ class SiswaCon extends Controller
         ]);
 
         $siswa = Siswa::findOrFail($id);
-        $id = $request->id_angkatan;        
+        $id = $request->id_angkatan;
 
         $dataUpdate = [
             'name' => $request->name,
@@ -325,5 +328,109 @@ class SiswaCon extends Controller
         //return redirect('/dataguru')->with('success', 'Data berhasil diperbarui');
         return redirect()->route('siswa.angkatan', $id)->with('success', 'Data berhasil diperbarui');
     }
-    
+
+    public function spmb($id)
+    {
+        $angkatan = Angkatan::find($id);
+        $response = Http::withHeaders([
+            'User-Agent' => 'Mozilla/5.0'
+        ])->get('https://spmb.smpmaarifnuwanareja.sch.id/apisiswa');  //masukkan url disini
+
+        $data_api = [];
+
+        if ($response->successful()) {
+            $result = $response->json();
+
+            if ($result['status']) {
+                $data_api = $result['data'];
+            }
+        }
+
+        $data = [
+            'title' => 'Ambil Data SPMB',
+            'data_api' => $data_api,
+            'angkatan' => $angkatan
+        ];
+
+        return view('rg-siswa-datasiswa-spmb', compact('data'));
+    }
+    public function apin($id)
+    {
+        $angkatan = Angkatan::find($id);
+        $response = Http::withHeaders([
+            'User-Agent' => 'Mozilla/5.0'
+        ])->get('https://apin-1.smpmaarifnuwanareja.sch.id/apisiswa');  //masukkan url disini
+
+        $data_api = [];
+
+        if ($response->successful()) {
+            $result = $response->json();
+
+            if ($result['status']) {
+                $data_api = $result['data'];
+            }
+        }
+
+        $data = [
+            'title' => 'Ambil Data Aplikasi Infaq Lama',
+            'data_api' => $data_api,
+            'angkatan' => $angkatan
+        ];
+
+        return view('rg-siswa-datasiswa-apin', compact('data'));
+    }
+
+    public function importSpmb(Request $request)
+    {
+        $selected = $request->siswa; // index yang dicentang
+        $data = $request->data;
+        $id = $request->id_angkatan;
+
+        if (!$selected) {
+            return back()->with('error', 'Pilih minimal 1 siswa');
+        }
+
+        $jumlah = 0;
+        foreach ($selected as $i) {
+            $s = $data[$i];
+
+            Siswa::create([
+                'name' => $s['name'],
+                'no_whatsapp' => $s['no_whatsapp'],
+                'id_angkatan' => $id
+            ]);
+
+            $jumlah++;
+        }
+
+        return redirect()->route('siswa.angkatan', $id)
+            ->with('success', 'Berhasil menyimpan ' . $jumlah . ' data siswa');
+    }
+    public function importApin(Request $request)
+    {
+        $selected = $request->siswa; // index yang dicentang
+        $data = $request->data;
+        $id = $request->id_angkatan;
+
+        if (!$selected) {
+            return back()->with('error', 'Pilih minimal 1 siswa');
+        }
+
+        $jumlah = 0;
+        foreach ($selected as $i) {
+            $s = $data[$i];
+
+            Siswa::create([
+                'name' => $s['name'],
+                'no_whatsapp' => $s['phonenumber'],
+                'id_angkatan' => $id
+            ]);
+
+            $jumlah++;
+        }
+
+        return redirect()->route('siswa.angkatan', $id)
+            ->with('success', 'Berhasil menyimpan ' . $jumlah . ' data siswa');
+    }
+
 }

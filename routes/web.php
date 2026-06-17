@@ -77,6 +77,12 @@ Route::middleware(['cekmasukguru'])->group(function () {
     Route::get('/editsiswa/{id}', [SiswaCon::class, 'edit']);
     Route::post('/updatesiswa/{id}', [SiswaCon::class, 'update']);
 
+    //SPMB
+    Route::get('/spmb/{id}', [SiswaCon::class, 'spmb']);
+    Route::get('/apin/{id}', [SiswaCon::class, 'apin']);
+    Route::post('/spmb/import', [SiswaCon::class, 'importSpmb']);
+    Route::post('/apin/import', [SiswaCon::class, 'importApin']);
+
     //InfaqCon
     Route::get('/datainfaq', [InfaqCon::class, 'index']);
     Route::get('/datainfaq/tahunajaran/{id}', [InfaqCon::class, 'byTahunajaran'])->name('infaq.tahunajaran');

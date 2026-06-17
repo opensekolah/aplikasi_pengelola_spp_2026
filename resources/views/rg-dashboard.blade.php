@@ -24,6 +24,13 @@
                 <span>Tanda Terima Honorarium</span>
             </div>
         </a>
+        <a href="https://docs.google.com/spreadsheets/d/1lhBsh9QwXDE62YeuGeYGdSEvlLnWuvTo3x_yoBxsk4c/edit?usp=sharing"
+            target="blank">
+            <div class="menuitem btn btn-success">
+                <i data-lucide="file-text"></i>
+                <span>Pembagian Jadwal Pelajaran Guru</span>
+            </div>
+        </a>
         <a href="/tambahpembayaran">
             <div class="menuitem btn btn-primary">
                 <i data-lucide="calculator"></i>
