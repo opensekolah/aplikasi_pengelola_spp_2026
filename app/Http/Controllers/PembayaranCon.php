@@ -118,9 +118,18 @@ class PembayaranCon extends Controller
                 return response()->json([]);
             }*/
 
-            // ambil infaq sesuai angkatan
+            // ambil infaq sesuai angkatan dan tahun ajaran
+            /*
             $infaq = DB::table('infaq')
                 ->where('id_angkatan', $siswa->id_angkatan)
+                ->get();
+                */
+            $tahunajaran = Tahunajaran::orderBy('created_at', 'desc')->first();
+
+
+            $infaq = DB::table('infaq')
+                ->where('id_angkatan', $siswa->id_angkatan)
+                ->where('id_tahunajaran', $tahunajaran->id)
                 ->get();
 
 
