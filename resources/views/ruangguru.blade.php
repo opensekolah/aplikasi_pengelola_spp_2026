@@ -94,7 +94,7 @@
 
         </nav>
 
-        <div class="text-center text-muted small mt-auto p-3">
+        <div class="text-center text-white small mt-auto p-3">
             {{ config('app.name') }} v{{ config('app.version') }}
         </div>
 
