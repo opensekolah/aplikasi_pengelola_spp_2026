@@ -94,6 +94,11 @@
 
         </nav>
 
+        <div class="text-center text-muted small mt-auto p-3">
+            {{ config('app.name') }} v{{ config('app.version') }}
+        </div>
+
+
         <!--div class="wa-status-box mt-auto p-3">
             <div class="d-flex align-items-center justify-content-between rounded-3 px-3 py-2"
                 style="background: var(--birutua); border: none;">
@@ -126,7 +131,7 @@
             }
         </style>
 
-        
+
 
 
     </div>

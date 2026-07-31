@@ -13,7 +13,9 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    //'name' => env('APP_NAME', 'Laravel'),
+    'name' => 'Aplikasi Pengelola Infaq',
+    'version' => '2.1.0',
 
     /*
     |--------------------------------------------------------------------------
