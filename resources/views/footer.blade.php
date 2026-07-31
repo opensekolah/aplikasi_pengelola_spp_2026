@@ -313,6 +313,56 @@
         btn.innerText = 'Menyimpan...';
     }
 </script>
+<script>
+    function notsetStatusIcon(iconName) {
+        const oldIcon = document.getElementById('wa-status-icon');
+
+        const newIcon = document.createElement('i');
+        newIcon.setAttribute('data-lucide', iconName);
+        newIcon.setAttribute('id', 'wa-status-icon');
+        newIcon.style.width = '12px';
+        newIcon.style.height = '12px';
+
+        if (iconName === 'loader-circle') {
+            newIcon.classList.add('spin-icon');
+        }
+
+        oldIcon.replaceWith(newIcon);
+        lucide.createIcons();
+    }
+
+    function notcekWaGateway() {
+        const statusElement = document.getElementById('wa-gateway-status');
+        const textElement = document.getElementById('wa-status-text');
+
+        textElement.innerText = '';
+        statusElement.className = 'badge rounded-pill text-bg-secondary d-flex align-items-center';
+        setStatusIcon('loader-circle');
+
+        fetch('/cek-fonnte')
+            .then(response => response.json())
+            .then(data => {
+                if (data.connected) {
+                    textElement.innerText = '';
+                    statusElement.className = 'badge rounded-pill text-bg-success d-flex align-items-center';
+                    setStatusIcon('check');
+                } else {
+                    textElement.innerText = '';
+                    statusElement.className = 'badge rounded-pill text-bg-danger d-flex align-items-center';
+                    setStatusIcon('x');
+                }
+            })
+            .catch(() => {
+                textElement.innerText = '';
+                statusElement.className = 'badge rounded-pill text-bg-danger d-flex align-items-center gap-1';
+                setStatusIcon('wifi-off');
+            });
+    }
+
+    cekWaGateway();
+    setInterval(cekWaGateway, 5000); 
+</script>
+
 
 
 </body>

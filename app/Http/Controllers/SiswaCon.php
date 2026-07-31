@@ -33,7 +33,9 @@ class SiswaCon extends Controller
         //$angkatan = Angkatan::findOrFail($id);
         $angkatan = Angkatan::withCount('siswa')->find($id);
 
-        $siswa = Siswa::where('id_angkatan', $id)->get();
+        $siswa = Siswa::where('id_angkatan', $id)
+            ->orderBy('name')
+            ->get();
 
         $data = [
             'title' => 'Data Siswa ' . optional($angkatan->kelompok)->name,

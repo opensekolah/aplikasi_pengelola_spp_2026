@@ -94,13 +94,47 @@
 
         </nav>
 
+        <!--div class="wa-status-box mt-auto p-3">
+            <div class="d-flex align-items-center justify-content-between rounded-3 px-3 py-2"
+                style="background: var(--birutua); border: none;">
+                <div class="d-flex align-items-center gap-2 text-white">
+                    <i data-lucide="message-circle" style="width: 16px; height: 16px;"></i>
+                    <span class="small">WhatsApp</span>
+                </div>
+                <span id="wa-gateway-status"
+                    class="badge rounded-pill text-bg-secondary d-flex align-items-center">
+                    <i data-lucide="loader-circle" id="wa-status-icon" class="spin-icon"
+                        style="width: 12px; height: 12px;"></i>
+                    <span id="wa-status-text"></span>
+                </span>
+            </div>
+        </div-->
+
+        <style>
+            .spin-icon {
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                from {
+                    transform: rotate(0deg);
+                }
+
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
+
+        
+
+
     </div>
     <div class="b">
         <div class="navbar">
             <span class="ms-3">Aplikasi Pengelola Infaq</span>
-            <div class="profil"><img
-  src="https://api.dicebear.com/9.x/initials/svg?seed={{ session('name') }}"
-  alt="avatar" class="rounded-circle me-2"/><span>{{ session('name') }}</span></div>
+            <div class="profil"><img src="https://api.dicebear.com/9.x/initials/svg?seed={{ session('name') }}"
+                    alt="avatar" class="rounded-circle me-2" /><span>{{ session('name') }}</span></div>
         </div>
         <div class="content">
             <div class="title-area">

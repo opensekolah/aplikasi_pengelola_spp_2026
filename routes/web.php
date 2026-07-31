@@ -113,4 +113,25 @@ Route::middleware(['cekmasukguru'])->group(function () {
     Route::get('/kwitansi/pdf/{id}', [PembayaranCon::class, 'pdfkwitansi']);
     Route::post('/hapuspembayaran/{id}', [PembayaranCon::class, 'hapus']);
 
+    Route::get('/transaksiberhasil', [PembayaranCon::class, 'transaksiBerhasil']);
+
+    Route::get('/cek-fonnte', function () {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => config('services.fonnte.token'),
+            ])->timeout(5)->post('https://api.fonnte.com/device');
+
+            $json = $response->json();
+
+            if (($json['device_status'] ?? null) === 'connect') {
+                return response()->json(['connected' => true]);
+            }
+
+            return response()->json(['connected' => false]);
+
+        } catch (\Exception $e) {
+            return response()->json(['connected' => false]);
+        }
+    });
+
 });

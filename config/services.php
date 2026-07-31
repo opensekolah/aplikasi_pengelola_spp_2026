@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'saungwa' => [
+        'url' => env('WA_API_URL'),
+        'appkey' => env('WA_APPKEY'),
+        'authkey' => env('WA_AUTHKEY'),
+    ],
+
+    'fonnte' => [
+        'token' => env('FONNTE_TOKEN'),
+    ],
+
 ];

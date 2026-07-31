@@ -14,6 +14,9 @@ use App\Models\Jenisbayar;
 use App\Models\Guru;
 use App\Models\Countertransaksi;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 //use App\Models\Pengaturan;
 
 class PembayaranCon extends Controller
@@ -231,11 +234,15 @@ class PembayaranCon extends Controller
                 return back()->with('error', 'Tidak ada data pembayaran');
             }
 
+            $rincian = [];
+            $total = 0;
+
             foreach ($request->bayar_infaq as $id_infaq => $nominal) {
 
                 if ($nominal > 0) {
 
                     $infaq = DB::table('infaq')->where('id', $id_infaq)->first();
+                    $namaInfaq = $infaq->name ?? '-';
 
                     DB::table('pembayaran')->insert([
                         'id_transaksi' => $id_transaksi,
@@ -243,7 +250,7 @@ class PembayaranCon extends Controller
                         'id_angkatan' => $request->id_angkatan,
                         'infaq_id' => $id_infaq,
 
-                        'infaq_name' => $infaq->name ?? null,
+                        'infaq_name' => $namaInfaq,
                         'infaq_harga' => $nominal,
 
                         'id_guru' => $id_guru,
@@ -251,12 +258,38 @@ class PembayaranCon extends Controller
 
                         //'created_at' => now(),
                     ]);
+
+                    // simpan untuk rincian pesan WA
+                    $rincian[] = "- {$namaInfaq}: Rp" . number_format($nominal, 0, ',', '.');
+                    $total += $nominal;
                 }
             }
 
             DB::commit();
 
-            return redirect('/datapembayaran')->with('success', 'Pembayaran berhasil disimpan');
+            // --- kirim notifikasi WA setelah transaksi sukses ---
+            $siswa = DB::table('siswa')->where('id', $request->id_siswa)->first();
+
+            if ($siswa && $siswa->no_whatsapp) {
+                $noWa = $this->normalisasiNomorWa($siswa->no_whatsapp);
+
+                $rincianText = implode("\n", $rincian);
+                $totalText = 'Rp' . number_format($total, 0, ',', '.');
+
+                $pesan = "Assalamu'alaikum Wr. Wb.🙏\n\n"
+                    . "Pembayaran Infaq SMP Ma'arif NU 01 Wanareja atas nama *{$siswa->name}* sebesar *{$totalText}* telah berhasil dicatat.\n\n"
+                    . "*Rincian Pembayaran:*\n"
+                    . "{$rincianText}\n\n"
+                    . "No. Ref: {$id_transaksi}\n\n"
+                    . "Terima kasih 🙏";
+
+                $this->fonntekirimWhatsapp($noWa, $pesan);
+            }
+
+            // return redirect('/datapembayaran')->with('success', 'Pembayaran berhasil disimpan');
+            return redirect('/transaksiberhasil')
+                ->with('success', 'Transaksi Berhasil')
+                ->with('id_transaksi', $id_transaksi);
 
         } catch (\Exception $e) {
 
@@ -358,6 +391,108 @@ class PembayaranCon extends Controller
 
         //return $pdf->stream('tagihan.pdf');
         return $pdf->download('Kwitansi_' . $data['nama_siswa'] . '_' . $data['tanggal'] . '.pdf');
+    }
+
+    public function transaksiBerhasil()
+    {
+        $id_transaksi = session('id_transaksi');
+
+        $pembayaran = Pembayaran::with(['siswa', 'jenisbayar'])
+            ->where('id_transaksi', $id_transaksi)
+            ->get();
+
+        $tanggal_transaksi = null;
+        $total_transaksi = 0;
+        $nama_siswa = null;
+        $no_whatsapp = null;
+        $jenis_bayar_label = null;
+        $nama_petugas = null;
+
+        if ($pembayaran->isNotEmpty()) {
+            $first = $pembayaran->first();
+
+            Carbon::setLocale('id');
+            $tanggal_transaksi = Carbon::parse($first->tanggal_pembayaran)
+                ->translatedFormat('d F Y, H:i:s') . ' WIB';
+
+            $total_transaksi = $pembayaran->sum('infaq_harga');
+
+            $nama_siswa = $first->siswa->name ?? null;
+            $no_whatsapp = $first->siswa->no_whatsapp ?? null;
+            $jenis_bayar_label = $first->jenisbayar->name ?? '-';
+            $nama_petugas = $first->guru->name ?? '-';
+        }
+
+        $data = [
+            'title' => 'Transaksi Berhasil'
+        ];
+
+        return view('rg-pembayaran-berhasil', compact(
+            'id_transaksi',
+            'pembayaran',
+            'data',
+            'tanggal_transaksi',
+            'total_transaksi',
+            'nama_siswa',
+            'no_whatsapp',
+            'jenis_bayar_label',
+            'nama_petugas'
+        ));
+    }
+
+    private function normalisasiNomorWa($nomor)
+    {
+        // hapus semua karakter selain angka (spasi, strip, dll)
+        $nomor = preg_replace('/[^0-9]/', '', $nomor);
+
+        // kalau sudah diawali 62, biarkan
+        if (str_starts_with($nomor, '62')) {
+            return $nomor;
+        }
+
+        // kalau diawali 0, ganti jadi 62
+        if (str_starts_with($nomor, '0')) {
+            return '62' . substr($nomor, 1);
+        }
+
+        // kalau tidak diawali apa-apa (misal cuma "8123..."), tambahkan 62 di depan
+        return '62' . $nomor;
+    }
+
+    private function saungwakirimWhatsapp($noWhatsapp, $pesan)
+    {
+        try {
+            $response = Http::asForm()->post(config('services.saungwa.url'), [
+                'appkey' => config('services.saungwa.appkey'),
+                'authkey' => config('services.saungwa.authkey'),
+                'to' => $noWhatsapp,
+                'message' => $pesan,
+                'sandbox' => 'false',
+            ]);
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Gagal kirim WA: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function fonntekirimWhatsapp($noWhatsapp, $pesan)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => config('services.fonnte.token'),
+            ])->asForm()->post('https://api.fonnte.com/send', [
+                        'target' => $noWhatsapp,
+                        'message' => $pesan,
+                    ]);
+
+            return $response->json();
+
+        } catch (\Exception $e) {
+            Log::error('Gagal kirim WA: ' . $e->getMessage());
+            return null;
+        }
     }
 
 }

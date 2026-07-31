@@ -24,6 +24,13 @@
                 <span>Tanda Terima Honorarium</span>
             </div>
         </a>
+        <a href="https://docs.google.com/spreadsheets/d/1RhodMqHeHVMhLPoPDR02C4MCkODyhnLzXX5ZFGa3UzQ/edit?usp=sharing"
+            target="blank">
+            <div class="menuitem btn btn-success">
+                <img src="https://www.jurnal.id/wp-content/uploads/2021/09/contoh-kwitansi.jpeg" height="64">
+                <span>Aplikasi Kwitansi BOSP</span>
+            </div>
+        </a>
         <a href="https://docs.google.com/spreadsheets/d/1lhBsh9QwXDE62YeuGeYGdSEvlLnWuvTo3x_yoBxsk4c/edit?usp=sharing"
             target="blank">
             <div class="menuitem btn btn-success">
@@ -31,6 +38,7 @@
                 <span>Pembagian Jadwal Pelajaran Guru</span>
             </div>
         </a>
+        
         <a href="/tambahpembayaran">
             <div class="menuitem btn btn-primary">
                 <i data-lucide="calculator"></i>
@@ -55,6 +63,13 @@
             <div class="menuitem btn btn-danger">
                 <i data-lucide="graduation-cap"></i>
                 <span>Tagihan Alumni</span>
+            </div>
+        </a>
+        <a href="https://apin1.smpmaarifnuwanareja.sch.id"
+            target="blank">
+            <div class="menuitem btn btn-secondary">
+                <img src="https://apin1.smpmaarifnuwanareja.sch.id/favicon.png" alt="">
+                <span class="">Buka APIN versi lama klik disini!</span>
             </div>
         </a>
     </div> <!-- end menukotak -->
