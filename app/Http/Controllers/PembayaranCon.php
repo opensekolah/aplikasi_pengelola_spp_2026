@@ -283,7 +283,7 @@ class PembayaranCon extends Controller
                     . "No. Ref: {$id_transaksi}\n\n"
                     . "Terima kasih 🙏";
 
-                $this->fonntekirimWhatsapp($noWa, $pesan);
+                $this->junioritkirimWhatsapp($noWa, $pesan);
             }
 
             // return redirect('/datapembayaran')->with('success', 'Pembayaran berhasil disimpan');
@@ -492,6 +492,38 @@ class PembayaranCon extends Controller
         } catch (\Exception $e) {
             Log::error('Gagal kirim WA: ' . $e->getMessage());
             return null;
+        }
+    }
+
+    private function junioritkirimWhatsapp($noWhatsapp, $pesan)
+    {
+        try {
+
+            $response = Http::post(
+                config('services.whatsapp.gateway') . '/send',
+                [
+                    'api_key' => config('services.whatsapp.api_key'),
+
+                    'phone' => $noWhatsapp,
+
+                    'message' => $pesan,
+                ]
+            );
+
+
+            return $response->json();
+
+
+        } catch (\Exception $e) {
+
+
+            Log::error(
+                'Gagal kirim WA: ' . $e->getMessage()
+            );
+
+
+            return null;
+
         }
     }
 

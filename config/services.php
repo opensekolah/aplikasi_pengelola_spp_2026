@@ -45,4 +45,18 @@ return [
         'token' => env('FONNTE_TOKEN'),
     ],
 
+    'whatsapp' => [
+
+        'gateway' => env(
+            'WHATSAPP_GATEWAY',
+            'https://invitationjuniorit.web.id/wa'
+        ),
+
+
+        'api_key' => env(
+            'WHATSAPP_API_KEY'
+        ),
+
+    ],
+
 ];

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use App\Models\Angkatan;
 use App\Models\Siswa;
 use App\Models\Kelompok;
@@ -149,6 +151,12 @@ class TagihanCon extends Controller
             }
 
             DB::commit();
+
+            //$this->kirimBulkWhatsappTagihan($acara_id);
+            $this->kirimBulkWhatsappTagihan(
+                $acara_id,
+                $request->id_kelompok
+            );
 
             return redirect('/datatagihan')->with('success', 'Tagihan berhasil dibuat');
 
@@ -383,6 +391,246 @@ class TagihanCon extends Controller
         return $pdf->download(
             'Tagihan_' . $data['acaraname'] . '_' . $data['kelasname'] . '.pdf'
         );
+    }
+
+    private function kirimBulkWhatsappTagihan($acara, $kelas)
+    {
+        try {
+
+            // =========================
+            // 1. AMBIL TAGIHAN
+            // =========================
+            $tagihan = DB::table('tagihan')
+                ->join('siswa', 'tagihan.id_siswa', '=', 'siswa.id')
+                ->where('tagihan.id_acara', $acara)
+                ->where('tagihan.id_kelompok', $kelas)
+                ->select(
+                    'tagihan.id_siswa',
+                    'tagihan.infaq_id',
+                    'tagihan.infaq_harga',
+                    'tagihan.infaq_name',
+                    'siswa.name as nama_siswa',
+                    'siswa.no_whatsapp'
+                )
+                ->get()
+                ->groupBy('id_siswa');
+
+
+            // =========================
+            // 2. AMBIL PEMBAYARAN
+            // =========================
+            $pembayaran = DB::table('pembayaran')
+                ->select(
+                    'id_siswa',
+                    'infaq_id',
+                    DB::raw('SUM(infaq_harga) as total')
+                )
+                ->groupBy(
+                    'id_siswa',
+                    'infaq_id'
+                )
+                ->get()
+                ->groupBy('id_siswa');
+
+
+
+            $data = [];
+
+
+
+            // =========================
+            // 3. FORMAT DATA WHATSAPP
+            // =========================
+            foreach ($tagihan as $id_siswa => $items) {
+
+
+                $siswa = $items->first();
+
+
+                $bayarSiswa = $pembayaran[$id_siswa] ?? collect();
+
+
+
+                $rincian = "";
+
+                $total = 0;
+
+                $nomor = 1;
+
+
+
+                foreach ($items as $item) {
+
+
+                    $itemBayar = $bayarSiswa
+                        ->firstWhere(
+                            'infaq_id',
+                            $item->infaq_id
+                        );
+
+
+
+                    $sisa =
+                        $item->infaq_harga -
+                        ($itemBayar->total ?? 0);
+
+
+
+                    // hanya tampilkan yang belum lunas
+                    if ($sisa > 0) {
+
+
+                        $rincian .=
+                            "- " .
+                            $item->infaq_name .
+                            "= Rp " .
+                            number_format(
+                                $sisa,
+                                0,
+                                ',',
+                                '.'
+                            ) .
+                            "\n";
+
+
+                        $total += $sisa;
+
+                        $nomor++;
+
+                    }
+
+                }
+
+
+
+                // =========================
+                // NORMALISASI NOMOR WA
+                // =========================
+                $nomorWhatsapp = $siswa->no_whatsapp;
+
+
+                if (
+                    str_starts_with(
+                        $nomorWhatsapp,
+                        '0'
+                    )
+                ) {
+
+                    $nomorWhatsapp =
+                        '62' .
+                        substr(
+                            $nomorWhatsapp,
+                            1
+                        );
+
+                }
+
+
+
+                // =========================
+                // MASUK DATA BULK
+                // =========================
+                if (
+                    $total > 0 &&
+                    $nomorWhatsapp
+                ) {
+
+
+                    $data[] = [
+
+                        "phone" => $nomorWhatsapp,
+
+                        "name" => $siswa->nama_siswa,
+
+                        "rincian" => $rincian,
+
+                        "total" => number_format(
+                            $total,
+                            0,
+                            ',',
+                            '.'
+                        )
+
+                    ];
+
+                }
+
+            }
+
+
+            //dd($data);
+
+            // tidak ada tagihan
+            if (count($data) == 0) {
+                return;
+            }
+
+
+
+            // =========================
+            // 4. KIRIM KE WA GATEWAY
+            // =========================
+            $response = Http::post(
+                config('services.whatsapp.gateway') . '/send/bulk',
+                [
+
+                    "api_key" =>
+                        config('services.whatsapp.api_key'),
+
+
+                    "template" =>
+                        "Assalamualaikum wr. wb.😊🙏🏼
+
+Yth Org Tua/Wali dari *{{name}}*
+
+Berikut ini kami kirimkan rincian administrasi SMP Ma'arif NU 01 Wanareja. Apabila ada kesalahan bisa datang langsung ke SMP menemui Bu Ining Suryani, S.Ag.
+Pembayaran bisa dicicil. Melayani juga pembayaran lewat Transfer Bank apabila sedang di luar kota.
+
+Rincian Administrasi *{{name}}* :
+
+{{rincian}}
+
+Jumlah:
+Rp{{total}}
+
+Pesan ini dikirim secara otomatis, jadi tidak bisa membalas Anda.
+Apabila ada pertanyaan bisa WA ke nomor bu *Ining Suryani* : 0881010822346
+
+Terima kasih.😊🙏🏼",
+
+
+                    "data" => $data
+
+                ]
+            );
+
+
+
+            Log::info(
+                'Bulk WA Tagihan',
+                [
+                    'total' => count($data),
+                    'response' => $response->json()
+                ]
+            );
+
+
+            return $response->json();
+
+
+
+        } catch (\Exception $e) {
+
+
+            Log::error(
+                'Gagal kirim bulk WA tagihan: ' .
+                $e->getMessage()
+            );
+
+
+            return null;
+
+        }
     }
 
 }
