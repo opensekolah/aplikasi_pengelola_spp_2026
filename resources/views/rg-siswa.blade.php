@@ -29,13 +29,13 @@
 
         <?php endforeach; ?>
 
-        <a href="/tambahangkatan">
+        <!--a href="/tambahangkatan">
             <div class="menuitem btn btn-success">
                 <i data-lucide="plus"></i>
                 
                 <span>Kenaikan Kelas & Tahun Ajaran Baru</span>
             </div>
-        </a>
+        </a-->
 
     </div> <!-- end menukotak -->
 
