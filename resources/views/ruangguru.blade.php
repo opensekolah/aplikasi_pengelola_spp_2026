@@ -95,7 +95,7 @@
         </nav>
 
         <div class="text-center text-white small mt-auto p-3">
-            v{{ trim(exec('git describe --tags --abbrev=0')) }}
+            v{{ config('version.version') }}
         </div>
 
 
