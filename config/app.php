@@ -15,7 +15,6 @@ return [
 
     //'name' => env('APP_NAME', 'Laravel'),
     'name' => 'Aplikasi Pengelola Infaq',
-    'version' => trim(exec('git describe --tags --abbrev=0')),
 
     /*
     |--------------------------------------------------------------------------
